@@ -57,7 +57,29 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve frontend static files
+const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+app.use(express.static(frontendDistPath));
+
+// Fallback SPA router for frontend routes
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  res.sendFile(path.join(frontendDistPath, 'index.html'), (err) => {
+    if (err) {
+      next();
+    }
+  });
+});
+
+// 404 handler for unmatched API routes
 app.use((req, res) => {
   res.status(404).json({
     success: false,
